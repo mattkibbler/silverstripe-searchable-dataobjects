@@ -1,12 +1,12 @@
-# Searchable DataObjects
+# Firebrand Searchable DataObjects
 
-Searchable DataObjects is a module that permit to include DataObjects into frontend search.
+Firebrand Searchable DataObjects is a fork of [Zirak's Searchable DataObjects](https://github.com/g4b0/silverstripe-searchable-dataobjects).
+
+Firebrand's version will return Pages matching a search criteria or having related Data Objects matching the search criteria. Zirak's version returns the DataObjects individual data objects.
 
 ## Introduction
 
-Pages are not always the better way to implement things. For example site news can grow rapidly and the first side effect
-would be a big and difficult to manage SiteTree. DataObjects help maintaining things clean and straight, but unfortunately 
-they are not included in frontend search. This module let you insert DataObject in search.
+Complexe SilverStripe pages will sometimes need to be divided up in various parts using DataObjects. Out of the box SilverStripe will only index the content in the main WYSIWYG area of a page. This means that related DataObjects will not be indexed and that their parent pages will not be returned in search results.
 
 ## Requirements
 
@@ -17,11 +17,10 @@ they are not included in frontend search. This module let you insert DataObject 
 
 Install the module through [composer](http://getcomposer.org):
 
-	composer require zirak/searchable-dataobjects
+	composer require firebrandhq/searchable-dataobjects
   composer update
 
-Make the DataObject (or Pages) implement Searchable interface (you need to implement Link(), getSearchFilter(), getTitleFields(), 
-getContentFields()):
+Make the DataObject (or Pages) implement Searchable interface (you need to getSearchFilter(), getTitleFields(), getContentFields(), getOwner()):
 
 ```php
 class DoNews extends DataObject implements Searchable {
@@ -35,14 +34,6 @@ class DoNews extends DataObject implements Searchable {
 	private static $has_one = array(
 			'Page' => 'PghNews'
 	);
-
-	/**
-	 * Link to this DO
-	 * @return string
-	 */
-	public function Link() {
-		return $this->Page()->Link() . 'read/' . $this->ID;
-	}
 
 	/**
 	 * Filter array
@@ -70,64 +61,13 @@ class DoNews extends DataObject implements Searchable {
 	public function getContentFields() {
 		return array('Subtitle', 'Content');
 	}
-}
-```
-
-Here you are a sample page holder, needed to implement the Link() function into the DataObject:
-
-```php
-class PghNews extends Page {
-
-	private static $has_many = array(
-			'News' => 'DoNews'
-	);
-
-	public function getCMSFields() {
-		$fields = parent::getCMSFields();
-
-		/* News */
-		$gridFieldConfig = GridFieldConfig_RelationEditor::create(100);
-		// Remove unlink
-		$gridFieldConfig->removeComponentsByType('GridFieldDeleteAction');
-		// Add delete
-		$gridFieldConfig->addComponents(new GridFieldDeleteAction());
-		// Remove autocompleter
-		$gridFieldConfig->removeComponentsByType('GridFieldAddExistingAutocompleter');
-		$field = new GridField(
-						'Faq', 'Faq', $this->News(), $gridFieldConfig
-		);
-		$fields->addFieldToTab('Root.News', $field);
-
-
-		return $fields;
-	}
-}
-
-class PghNews_Controller extends Page_Controller {
-
-	private static $allowed_actions = array(
-			'read'
-	);
-
-	public function read(SS_HTTPRequest $request) {
-		$arguments = $request->allParams();
-		$id = $arguments['ID'];
-
-		// Identifico la faq dall'ID
-		$Object = DataObject::get_by_id('DoNews', $id);
-
-		if ($Object) {
-			//Popolo l'array con il DataObject da visualizzare
-			$Data = array($Object->class => $Object);
-			$this->data()->Title = $Object->Title;
-
-			$themedir = $_SERVER['DOCUMENT_ROOT'] . '/' . SSViewer::get_theme_folder() . '/templates/';
-			$retVal = $this->Customise($Data);
-			return $retVal;
-		} else {
-			//Not found
-			return $this->httpError(404, 'Not found');
-		}
+	
+	/**
+	 * SiteTree that should be returned in search results.
+	 * @return array
+	 */
+	public function getOwner() {
+		return $this->Page;
 	}
 }
 ```
@@ -160,12 +100,3 @@ From MySQL manual entry [http://dev.mysql.com/doc/refman/5.1/en/fulltext-search.
 A natural language search interprets the search string as a phrase in natural human language (a phrase in free text). There are no special operators.
 The stopword list applies. In addition, words that are present in 50% or more of the rows are considered common and do not match. 
 Full-text searches are natural language searches if the IN NATURAL LANGUAGE MODE modifier is given or if no modifier is given.
-
-### TODO
-
- * Add other search method in configuration
- * Add page length in configuration
-
-### Suggested modules
-
- * Linkable DataObjects: http://addons.silverstripe.org/add-ons/zirak/linkable-dataobjects
