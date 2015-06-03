@@ -9,12 +9,6 @@
 interface Searchable {
 	
 	/**
-	 * Link to this DO
-	 * @return string
-	 */
-	public function Link();
-	
-	/**
 	 * Filter array
 	 * eg. array('Disabled' => 0);
 	 * @return string
