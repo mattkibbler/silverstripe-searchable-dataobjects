@@ -20,6 +20,8 @@ class PopulateSearch extends BuildTask {
 													Title varchar(255) NOT NULL,
 													Content text NOT NULL,
 													PageID integer NOT NULL DEFAULT 0,
+													OwnerID integer NOT NULL DEFAULT 0,
+													OwnerClassName varchar(255) NOT NULL,
 													PRIMARY KEY(ID, ClassName)
 												) ENGINE=MyISAM");
 		DB::query("ALTER TABLE SearchableDataObjects ADD FULLTEXT (`Title` ,`Content`)");
@@ -42,7 +44,10 @@ class PopulateSearch extends BuildTask {
 		foreach($do->getContentFields() as $field) {
 			$Content .= Purifier::PurifyTXT($do->$field). ' ';
 		}
-		self::storeData($do->ID, $do->ClassName, trim($Title), trim($Content));
+		
+		$owner = $do->getOwner();
+		
+		self::storeData($do->ID, $do->ClassName, trim($Title), trim($Content), $owner->ID, $owner->ClassName);
 	}
 	
 	/**
@@ -54,7 +59,7 @@ class PopulateSearch extends BuildTask {
 		$Content = Purifier::PurifyTXT($p->Content);
 		$Content = Purifier::RemoveEmbed($Content);
 
-		self::storeData($p->ID, $p->ClassName, $p->Title, $Content);
+		self::storeData($p->ID, $p->ClassName, $p->Title, $Content, $p->ID, $p->ClassName);
 	}
 
 	/**
@@ -65,23 +70,27 @@ class PopulateSearch extends BuildTask {
 	 * @param $content
 	 */
 
-	private static function storeData($id, $class_name, $title, $content)
+	private static function storeData($id, $class_name, $title, $content, $ownerID, $ownerClassName)
 	{
 		// prepare the query ...
 		$query = sprintf(
 			'INSERT INTO `SearchableDataObjects`
-				(`ID`,  `ClassName`, `Title`, `Content`)
+				(`ID`,  `ClassName`, `Title`, `Content`, `OwnerID`,  `OwnerClassName`)
 			 VALUES
-			 	(%1$d, \'%2$s\', \'%3$s\', \'%4$s\')
+			 	(%1$d, \'%2$s\', \'%3$s\', \'%4$s\', %5$d, \'%6$s\')
 			 ON DUPLICATE KEY
 			 UPDATE
 			 	Title=\'%3$s\',
-			 	Content=\'%4$s\'
+			 	Content=\'%4$s\',
+			 	OwnerID=%5$d,
+			 	OwnerClassName=\'%6$s\'
 			',
 			intval($id),
 			DB::getConn()->addslashes($class_name),
 			DB::getConn()->addslashes($title),
-			DB::getConn()->addslashes($content)
+			DB::getConn()->addslashes($content),
+			intval($ownerID),
+			DB::getConn()->addslashes($ownerClassName)
 		);
 
 		// run query ...

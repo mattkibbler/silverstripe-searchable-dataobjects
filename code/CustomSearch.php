@@ -53,7 +53,32 @@ class CustomSearch extends Extension {
 		$s = $v["start"];
 		
 		$input = DB::getConn()->addslashes($q);
-		$data = DB::query("SELECT * FROM SearchableDataObjects WHERE MATCH (Title, Content) AGAINST ('$input' IN NATURAL LANGUAGE MODE)");
+		$data = DB::query(<<<EOF
+SELECT 
+	`pages`.`ID`, 
+	`pages`.`ClassName`, 
+	`pages`.`Title`, 
+	GROUP_CONCAT(`do`.`Content` SEPARATOR ' ') as `Content`,
+	`pages`.`PageID`,
+	SUM(MATCH (`do`.`Title`, `do`.`Content`) AGAINST ('$input' IN NATURAL LANGUAGE MODE)) as `relevance`
+FROM
+	SearchableDataObjects as `pages`
+JOIN
+	SearchableDataObjects as `do`
+ON
+	`pages`.`ID` = `do`.`OwnerID`
+WHERE
+	`pages`.`ID` = `pages`.`OwnerID` AND
+    `pages`.`ClassName` = `pages`.`OwnerClassName`
+GROUP BY
+	`pages`.`ID`, 
+	`pages`.`ClassName` 
+HAVING
+	`relevance`
+ORDER BY
+	`relevance` DESC
+EOF
+		);
 		
 		foreach ($data as $row) {
 			

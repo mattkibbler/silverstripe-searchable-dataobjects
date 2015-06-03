@@ -35,4 +35,11 @@ interface Searchable {
 	 */
 	public function getContentFields();
 	
+	/**
+	 * Return the owner of this data object where search results should be pointing.
+	 * eg. array('Teaser', 'Content');
+	 * @return SiteTree
+	 */
+	public function getOwner();
+	
 }
