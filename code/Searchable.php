@@ -32,14 +32,15 @@ interface Searchable {
 	public function getContentFields();
 	
 	/**
-	 * Return the owner of this data object where search results should be pointing.
-	 * eg. array('Teaser', 'Content');
-	 * @return SiteTree
+	 * Parent objects that should be displayed in search results.
+	 * @return SiteTree or SearchableLinkable
 	 */
 	public function getOwner();
 	
 	/**
-	 * Whatever this specific SearchableLinkable should be included in search results.
+	 * Whatever this specific Searchable should be included in search results.
+	 * This allows you to exclude some DataObjects from search results.
+	 * It plays more or less the same role that ShowInSearch plays for SiteTree.
 	 * @return boolean
 	 */
 	public function IncludeInSearch();

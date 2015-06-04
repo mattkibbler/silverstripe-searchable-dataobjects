@@ -20,19 +20,25 @@ Install the module through [composer](http://getcomposer.org):
 	composer require firebrandhq/searchable-dataobjects
   composer update
 
-Make the DataObject (or Pages) implement Searchable interface (you need to getSearchFilter(), getTitleFields(), getContentFields(), getOwner()):
+Make the DataObject (or Pages) implement `Searchable` or `SearchableLinkable` interface. You need to define `getSearchFilter()`, `getTitleFields()`, `getContentFields()`, `getOwner()`, `IncludeInSearch()`). Classes that implement the `SearchableLinkable` interface, must additionnaly define a `Link()` function.
+
+DataObjects that are accessible via a URL should implement `SearchableLinkable` while DataObjects that belong to a parent object without being reable directly should implement `Searchable`.
 
 ```php
-class DoNews extends DataObject implements Searchable {
+class DoNews extends DataObject implements SearchableLinkable {
 
 	private static $db = array(
-			'Title' => 'Varchar',
-			'Subtitle' => 'Varchar',
-			'News' => 'HTMLText',
-			'Date' => 'Date',
+		'Title' => 'Varchar',
+		'Subtitle' => 'Varchar',
+		'News' => 'HTMLText',
+		'Date' => 'Date',
 	);
 	private static $has_one = array(
-			'Page' => 'PghNews'
+		'Page' => 'PghNews'
+	);
+	
+	private static $has_many = array(
+		'Asides' => 'Aside'
 	);
 
 	/**
@@ -63,14 +69,92 @@ class DoNews extends DataObject implements Searchable {
 	}
 	
 	/**
-	 * SiteTree that should be returned in search results.
-	 * @return array
+	 * Parent objects that should be displayed in search results.
+	 * @return SiteTree or SearchableLinkable
 	 */
 	public function getOwner() {
-		return $this->Page;
+		return $this;
+	}
+	
+	/**
+	 * Whatever this specific Searchable should be included in search results.
+	 * This allows you to exclude some DataObjects from search results.
+	 * It plays more or less the same role that ShowInSearch plays for SiteTree.
+	 * @return boolean
+	 */
+	public function IncludeInSearch() {
+		return true;
+	}
+	
+	/**
+	 * Link to access this DO
+	 * @return string
+	 */
+	public function Link() {
+		$this->Page->Link('news/' . $this->ID);
 	}
 }
 ```
+
+```php
+class Aside extends DataObject implements Searchable {
+
+	private static $db = array(
+		'Header' => 'Varchar',
+		'Content' => 'HTMLText',
+	);
+	private static $has_one = array(
+		'DoNews' => 'DoNews'
+	);
+
+
+	/**
+	 * Filter array
+	 * eg. array('Disabled' => 0);
+	 * @return array
+	 */
+	public static function getSearchFilter() {
+		return array();
+	}
+
+	/**
+	 * Fields that compose the Title
+	 * eg. array('Title', 'Subtitle');
+	 * @return array
+	 */
+	public function getTitleFields() {
+		return array('Header');
+	}
+
+	/**
+	 * Fields that compose the Content
+	 * eg. array('Teaser', 'Content');
+	 * @return array
+	 */
+	public function getContentFields() {
+		return array('Content');
+	}
+	
+	/**
+	 * Parent objects that should be displayed in search results.
+	 * @return SiteTree or SearchableLinkable
+	 */
+	public function getOwner() {
+		return $this->DoNews;
+	}
+	
+	/**
+	 * Whatever this specific Searchable should be included in search results.
+	 * This allows you to exclude some DataObjects from search results.
+	 * It plays more or less the same role that ShowInSearch plays for SiteTree.
+	 * @return boolean
+	 */
+	public function IncludeInSearch() {
+		return true;
+	}
+}
+```
+
 
 Extend Page and the desired DataObjects through the following yaml:
 
@@ -88,7 +172,7 @@ Run a `dev/build` and then populate the search table running PopulateSearch task
 	sake dev/build "flush=all"
 	sake dev/tasks/PopulateSearch
 
-Enjoy the news into the search results :)
+When you save your pages or you DataObject, they will automatically update their entry in the search table.
 
 ### Note
 

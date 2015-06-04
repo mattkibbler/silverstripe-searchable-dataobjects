@@ -9,7 +9,7 @@
 interface SearchableLinkable extends Searchable {
 	
 	/**
-	 * Link to this DO
+	 * Link to access this DO
 	 * @return string
 	 */
 	public function Link();
