@@ -52,7 +52,6 @@ class CustomSearch extends Extension {
 			$v["start"] = 0;
 
 		$q = $v["Search"];
-		$s = $v["start"];
 		
 		$input = DB::getConn()->addslashes($q);
 		$data = DB::query(<<<EOF
@@ -92,11 +91,8 @@ EOF
 			$list->push($do);
 		}
 			
-		$ret = new PaginatedList($list);
+		$ret = new PaginatedList($list, $request);
 		$ret->setPageLength(10);
-		$ret->setPageStart($s);
-		$ret->setTotalItems($list->count());
-		$ret->setLimitItems(0);
 		
 		return $ret;
 	}
