@@ -1,11 +1,12 @@
 <?php
 
 /**
- * Ricrea la tabella di ricerca ad ogni esecuzione, e la popola con i dati
- * prelevati dai DataObject
+ * Task manager to build searchable Data object table to do the initial index.
  *
- * @author Gabriele Brosulo <gabriele.brosulo@zirak.it>
- * @creation-date 23-Apr-2014
+ * Originally created by Gabriele Brosulo <gabriele.brosulo@zirak.it>
+ *
+ * @author Firebrand <developers@firebrand.nz>
+ * @creation-date 04-June-2015
  */
 class PopulateSearch extends BuildTask {
 	
@@ -117,6 +118,10 @@ class PopulateSearch extends BuildTask {
 		 * DataObjects
 		 */		
 		$searchables = ClassInfo::implementorsOf('Searchable');
+		$linkables = ClassInfo::implementorsOf('SearchableLinkable');
+		$searchables = array_unique(array_merge($linkables, $searchables));
+		
+		
 		foreach ($searchables as $class) {
 			// Filter
 			$dos = $class::get()->filter($class::getSearchFilter());

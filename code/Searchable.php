@@ -3,8 +3,10 @@
 /**
  * Searchable - interface to implement in order to be a searchable DO
  *
- * @author Gabriele Brosulo <gabriele.brosulo@zirak.it>
- * @creation-date 09-May-2014
+ * Originally created by Gabriele Brosulo <gabriele.brosulo@zirak.it>
+ *
+ * @author Firebrand <developers@firebrand.nz>
+ * @creation-date 04-June-2015
  */
 interface Searchable {
 	
@@ -36,4 +38,9 @@ interface Searchable {
 	 */
 	public function getOwner();
 	
+	/**
+	 * Whatever this specific SearchableLinkable should be included in search results.
+	 * @return boolean
+	 */
+	public function IncludeInSearch();
 }

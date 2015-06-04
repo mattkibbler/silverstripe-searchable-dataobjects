@@ -3,8 +3,10 @@
 /**
  * Extension to provide a search interface when applied to ContentController
  *
- * @package cms
- * @subpackage search
+ * Originally created by Gabriele Brosulo <gabriele.brosulo@zirak.it>
+ *
+ * @author Firebrand <developers@firebrand.nz>
+ * @creation-date 04-June-2015
  */
 class CustomSearch extends Extension {
 
@@ -66,7 +68,8 @@ FROM
 JOIN
 	SearchableDataObjects as `do`
 ON
-	`pages`.`ID` = `do`.`OwnerID`
+	`pages`.`ID` = `do`.`OwnerID` AND
+	`pages`.`ClassName` = `do`.`OwnerClassName`
 WHERE
 	`pages`.`ID` = `pages`.`OwnerID` AND
     `pages`.`ClassName` = `pages`.`OwnerClassName`
@@ -103,7 +106,7 @@ EOF
 		$data = array(
 				'Results' => $this->getSearchResults($request),
 				'Query' => $form->getSearchQuery(),
-				'Title' => _t('Search_results', 'Risultati della ricerca')
+				'Title' => _t('Search_results', 'Search Results')
 		);
 		return $this->owner->customise($data)->renderWith(array('Page_results', 'Page'));
 	}
