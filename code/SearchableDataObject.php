@@ -42,7 +42,7 @@ class SearchableDataObject extends DataExtension {
 			}
 			
 		} else if ($this->owner instanceof SiteTree) {
-			if ($this->owner->ShowInSearch()) {
+			if ($this->owner->ShowInSearch) {
 				PopulateSearch::insertPage($this->owner);
 			} else {
 				$this->deleteDo($this->owner);
