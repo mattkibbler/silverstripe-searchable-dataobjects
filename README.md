@@ -18,7 +18,7 @@ Complexe SilverStripe pages will sometimes need to be divided up in various part
 Install the module through [composer](http://getcomposer.org):
 
 ```bash
-	composer require firebrandhq/searchable-dataobjects
+composer require firebrandhq/searchable-dataobjects
 ```
 
 Make the DataObject (or Pages) implement `Searchable` or `SearchableLinkable` interface. You need to define `getSearchFilter()`, `getTitleFields()`, `getContentFields()`, `getOwner()`, `IncludeInSearch()`). Classes that implement the `SearchableLinkable` interface, must additionnaly define a `Link()` function.
@@ -171,8 +171,8 @@ DoNews:
 Run a `dev/build` and then populate the search table running PopulateSearch task:
 
 ```bash
-	sake dev/build "flush=all"
-	sake dev/tasks/PopulateSearch
+sake dev/build "flush=all"
+sake dev/tasks/PopulateSearch
 ```
 
 When you save your pages or you DataObject, they will automatically update their entry in the search table.
