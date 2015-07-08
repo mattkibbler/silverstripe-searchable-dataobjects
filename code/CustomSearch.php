@@ -85,6 +85,9 @@ EOF
 		foreach ($data as $row) {
 			
 			$do = DataObject::get_by_id($row['ClassName'], $row['ID']);
+
+			if (!$do) {continue;}
+
 			$do->Title = $row['Title'];
 			$do->Content = $row['Content'];
 						
