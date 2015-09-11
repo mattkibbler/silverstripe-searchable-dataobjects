@@ -10,6 +10,11 @@
  */
 class CustomSearch extends Extension {
 
+	/**
+	 * @var int the number of items for each page, used for pagination
+	 */
+	private static $items_per_page = 10;
+
 	static $allowed_actions = array(
 			'SearchForm',
 			'results',
@@ -19,7 +24,7 @@ class CustomSearch extends Extension {
 	 * Site search form
 	 */
 	public function SearchForm() {
-		
+
 		$searchText = _t('SearchForm.SEARCH', 'Search');
 
 		if ($this->owner->request && $this->owner->request->getVar('Search')) {
@@ -46,19 +51,16 @@ class CustomSearch extends Extension {
 	public function getSearchResults($request) {
 
 		$list = new ArrayList();
-						
-		$v = $request->getVars();
-		if (!isset($v["start"]))
-			$v["start"] = 0;
 
+		$v = $request->getVars();
 		$q = $v["Search"];
-		
+
 		$input = DB::getConn()->addslashes($q);
 		$data = DB::query(<<<EOF
-SELECT 
-	`pages`.`ID`, 
-	`pages`.`ClassName`, 
-	`pages`.`Title`, 
+SELECT
+	`pages`.`ID`,
+	`pages`.`ClassName`,
+	`pages`.`Title`,
 	GROUP_CONCAT(`do`.`Content` SEPARATOR ' ') as `Content`,
 	`pages`.`PageID`,
 	SUM(MATCH (`do`.`Title`, `do`.`Content`) AGAINST ('$input' IN NATURAL LANGUAGE MODE)) as `relevance`
@@ -73,35 +75,36 @@ WHERE
 	`pages`.`ID` = `pages`.`OwnerID` AND
     `pages`.`ClassName` = `pages`.`OwnerClassName`
 GROUP BY
-	`pages`.`ID`, 
-	`pages`.`ClassName` 
+	`pages`.`ID`,
+	`pages`.`ClassName`
 HAVING
 	`relevance`
 ORDER BY
 	`relevance` DESC
 EOF
 		);
-		
+
 		foreach ($data as $row) {
-			
+
 			$do = DataObject::get_by_id($row['ClassName'], $row['ID']);
 
 			if (!$do) {continue;}
 
 			$do->Title = $row['Title'];
 			$do->Content = $row['Content'];
-						
+
 			$list->push($do);
 		}
-			
+
+		$pageLength = Config::inst()->get('CustomSearch', 'items_per_page');
 		$ret = new PaginatedList($list, $request);
-		$ret->setPageLength(10);
-		
+		$ret->setPageLength($pageLength);
+
 		return $ret;
 	}
 
 	public function results($data, $form, $request) {
-		
+
 		$data = array(
 				'Results' => $this->getSearchResults($request),
 				'Query' => $form->getSearchQuery(),
