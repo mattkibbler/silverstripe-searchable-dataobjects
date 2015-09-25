@@ -10,7 +10,7 @@ Complexe SilverStripe pages will sometimes need to be divided up in various part
 
 ## Requirements
 
- * SilverStripe 3.1
+ * SilverStripe 3.1.*
  * zirak/htmlpurifier
 
 ### Installation
@@ -37,7 +37,7 @@ class DoNews extends DataObject implements SearchableLinkable {
 	private static $has_one = array(
 		'Page' => 'PghNews'
 	);
-	
+
 	private static $has_many = array(
 		'Asides' => 'Aside'
 	);
@@ -49,6 +49,26 @@ class DoNews extends DataObject implements SearchableLinkable {
 	 */
 	public static function getSearchFilter() {
 		return array();
+	}
+
+	/**
+	 * FilterAny array (optional)
+	 * eg. array('Disabled' => 0, 'Override' => 1);
+	 * @return array
+	 */
+	public static function getSearchFilterAny() {
+		return array();
+	}
+
+	/**
+	 * FilterByCallback function (optional)
+	 * eg. function($object){
+	 *	return ($object->StartDate > date('Y-m-d') || $object->isStillRecurring());
+	 * };
+	 * @return array
+	 */
+	public static function getSearchFilterByCallback() {
+		return function($object){};
 	}
 
 	/**
@@ -68,7 +88,7 @@ class DoNews extends DataObject implements SearchableLinkable {
 	public function getContentFields() {
 		return array('Subtitle', 'Content');
 	}
-	
+
 	/**
 	 * Parent objects that should be displayed in search results.
 	 * @return SiteTree or SearchableLinkable
@@ -76,7 +96,7 @@ class DoNews extends DataObject implements SearchableLinkable {
 	public function getOwner() {
 		return $this;
 	}
-	
+
 	/**
 	 * Whatever this specific Searchable should be included in search results.
 	 * This allows you to exclude some DataObjects from search results.
@@ -86,7 +106,7 @@ class DoNews extends DataObject implements SearchableLinkable {
 	public function IncludeInSearch() {
 		return true;
 	}
-	
+
 	/**
 	 * Link to access this DO
 	 * @return string
@@ -135,7 +155,7 @@ class Aside extends DataObject implements Searchable {
 	public function getContentFields() {
 		return array('Content');
 	}
-	
+
 	/**
 	 * Parent objects that should be displayed in search results.
 	 * @return SiteTree or SearchableLinkable
@@ -143,7 +163,7 @@ class Aside extends DataObject implements Searchable {
 	public function getOwner() {
 		return $this->DoNews;
 	}
-	
+
 	/**
 	 * Whatever this specific Searchable should be included in search results.
 	 * This allows you to exclude some DataObjects from search results.
@@ -177,6 +197,24 @@ sake dev/tasks/PopulateSearch
 
 When you save your pages or you DataObject, they will automatically update their entry in the search table.
 
+### Modifying
+
+#### Set the number of search results per page
+
+Setting the `CustomSearch.items_per_page` config setting you can define, how many search results per page are shown. Default is 10
+
+By default the search result is shown at the same page, so if you're searching e.g. on the */about-us/*, the results are
+shown on */about-us/SearchForm/?s=foo*. If you don't like that, you can define any Page or Controller class in the
+`CustomSearch.search_controller` setting. If you set this setting to `this`, the current page will be used. Defaults to `SearchPage`
+and falls back to the current page if no SearchPage is found.
+
+```YAML
+
+CustomSearch:
+  items_per_page: 15
+  search_controller: SearchPage #page type to show the search
+```
+
 ### Note
 
 Searchable DataObjects module use Mysql NATURAL LANGUAGE MODE search method, so during your tests be sure not to have all DataObjetcs
@@ -185,5 +223,5 @@ with the same content, since words that are present in 50% or more of the rows a
 From MySQL manual entry [http://dev.mysql.com/doc/refman/5.1/en/fulltext-search.html]:
 
 A natural language search interprets the search string as a phrase in natural human language (a phrase in free text). There are no special operators.
-The stopword list applies. In addition, words that are present in 50% or more of the rows are considered common and do not match. 
+The stopword list applies. In addition, words that are present in 50% or more of the rows are considered common and do not match.
 Full-text searches are natural language searches if the IN NATURAL LANGUAGE MODE modifier is given or if no modifier is given.

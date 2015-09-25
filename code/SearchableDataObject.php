@@ -1,27 +1,27 @@
 <?php
 
 /**
- * SearchableDataObject - extension that let the DO to auto update the search table 
+ * SearchableDataObject - extension that let the DO to auto update the search table
  * after a write
- * 
+ *
  * Originally created by Gabriele Brosulo <gabriele.brosulo@zirak.it>
  *
  * @author Firebrand <developers@firebrand.nz>
  * @creation-date 04-June-2015
  */
 class SearchableDataObject extends DataExtension {
-	
+
 	private function deleteDo(DataObject $do) {
 		$id = $do->ID;
 		$class = $do->class;
 		DB::query("DELETE FROM SearchableDataObjects WHERE ID=$id AND ClassName='$class'");
 	}
-	
+
 	public function onAfterWrite() {
 		parent::onAfterWrite();
-		
+
 		if (in_array('Searchable', class_implements($this->owner->class))) {
-			
+
 			if ($this->owner->IncludeInSearch()) {
 				if($this->owner->hasExtension('Versioned')) {
 					$filterID = array('ID' => $this->owner->ID);
@@ -40,7 +40,7 @@ class SearchableDataObject extends DataExtension {
 			} else {
 				$this->deleteDo($this->owner);
 			}
-			
+
 		} else if ($this->owner instanceof SiteTree) {
 			if ($this->owner->ShowInSearch) {
 				PopulateSearch::insertPage($this->owner);
@@ -49,14 +49,31 @@ class SearchableDataObject extends DataExtension {
 			}
 		}
 	}
-	
+
 	/**
 	 * Remove the entry from the search table before deleting it
 	 */
 	public function onBeforeDelete() {
 		parent::onBeforeDelete();
-		
+
 		$this->deleteDo($this->owner);
 	}
-	
+
+  /**
+   * Check and create the required table during dev/build
+   */
+  public function augmentDatabase() {
+	DB::query("CREATE TABLE IF NOT EXISTS SearchableDataObjects (
+												ID int(10) unsigned NOT NULL,
+												ClassName varchar(255) NOT NULL,
+												Title varchar(255) NOT NULL,
+												Content text NOT NULL,
+												PageID integer NOT NULL DEFAULT 0,
+												OwnerID integer NOT NULL DEFAULT 0,
+												OwnerClassName varchar(255) NOT NULL,
+												PRIMARY KEY(ID, ClassName)
+											) ENGINE=MyISAM");
+	DB::query("ALTER TABLE SearchableDataObjects ADD FULLTEXT (`Title` ,`Content`)");
+  }
+
 }
